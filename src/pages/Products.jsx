@@ -12,6 +12,9 @@ function Products (){
     const [productCategory, setProductCategory] = useState('');
     const [showModalInsert, setShowModalInsert] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
+    const [currentProduct, setCurrentProduct] = useState({id : 0, name : "", product_category : "", description : ""});
+
 
     //form state
     const [fieldProductName, setFieldProductName] = useState('');
@@ -53,6 +56,25 @@ function Products (){
         }
     };
 
+    const handleEditProduct = async () => {
+        try{
+            await axios.put(`http://localhost:8000/api/product/edit`, {
+                id : currentProduct.id,
+                name: currentProduct.name,
+                product_category : currentProduct.product_category,
+                description : currentProduct.description
+            });
+            fetchProductsDetails(currentPage);
+            setShowModalEdit(false);
+            setFieldProductName('');
+            setFieldProductDescription('');
+            setFieldProductCategory('');
+            setCurrentProduct({ id: 0, name: "", product_category: "", description: "" });
+        }catch(error){
+            console.log("Error update product : ",error);
+        }
+    };
+
     const handlePageChange = (page) => {
         setCurrentPage(page);
     };
@@ -61,6 +83,13 @@ function Products (){
         setCurrentPage(1);
         fetchProductsDetails(1);
     };
+
+    const handleShowModalToEdit = (product = null) => {
+        setIsEdit(!!product);
+        setCurrentProduct(product || {id : 0, name: "", product_category: "", description : ""});
+        setShowModalEdit(true);
+    };
+
 
     const productCategories = ["Rokok", "Obat", "Lainnya"];
 
@@ -112,6 +141,7 @@ function Products (){
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>ID</th>
                         <th>NAME</th>
                         <th>CATEGORY</th>
                         <th>DESCRIPTION</th>
@@ -123,6 +153,7 @@ function Products (){
                     {products.map((product, index) => (
                         <tr key={product.id}>
                             <td>{index + 1}</td>
+                            <td>{product.id}</td>
                             <td>{product.name}</td>
                             <td>{product.product_category}</td>
                             <td>{product.description}</td>
@@ -140,7 +171,7 @@ function Products (){
                             ))}
                             </td>
                             <td>
-                                <Button variant="primary">Edit</Button>
+                                <Button variant="primary" onClick={() => handleShowModalToEdit(product)}>Edit</Button>
                                 &nbsp;
                                 <Button variant="primary">Prices</Button>
                                 &nbsp;
@@ -221,6 +252,60 @@ function Products (){
                     </Button>
                     <Button variant="primary" onClick={handleAddProduct}>
                         Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* modal update */}
+            <Modal show={showModalEdit} onHide={() => setShowModalEdit(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Product</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group controlId="newProductName">
+                        <Form.Label>Product ID</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter product name"
+                                value={currentProduct.id}
+                                onChange={(e) => setCurrentProduct({...currentProduct,id: e.target.value})}
+                            />
+                            <Form.Label>Product Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter product name"
+                                value={currentProduct.name}
+                                onChange={(e) => setCurrentProduct({...currentProduct,name: e.target.value})}
+                            />
+                        </Form.Group>
+                        <Form.Group>
+                            <Form.Label>Product Category</Form.Label>
+                            <Form.Select value={currentProduct.product_category}
+                                onChange={(e) => setCurrentProduct({...currentProduct,product_category: e.target.value})}>
+                                    <option value="">Select Category</option>
+                                    {productCategories.map((category) => (
+                                        <option key={category} value={category}>{category}</option>
+                                    ))}
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group>
+                            <Form.Label>Product Description</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter product description"
+                                value={currentProduct.description}
+                                onChange={(e) => setCurrentProduct({...currentProduct,description: e.target.value})}
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={() => setShowModalEdit(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleEditProduct}>
+                        Update
                     </Button>
                 </Modal.Footer>
             </Modal>
